@@ -1163,9 +1163,8 @@ function generateLayout() {
   var totalKeyPresses = 0;
   for (let layerIndex = 0; layerIndex < key_press_freq.length; layerIndex++) {
     for (let i = 0; i < key_press_freq[layerIndex].length; i++) {
-      var label = layers[layerIndex] && layers[layerIndex][i] ? layers[layerIndex][i] : "";
       totalKeyPresses += key_press_freq[layerIndex][i];
-      if ((!include_space_stats || label != "space") && key_press_freq[layerIndex][i] > keyUsageMax) {
+      if (key_press_freq[layerIndex][i] > keyUsageMax) {
         keyUsageMax = key_press_freq[layerIndex][i];
       }
     }
@@ -1200,22 +1199,15 @@ function generateLayout() {
       x = rcdata[i][5];
       y = rcdata[i][4] + layerOffset + 24;
       keywidth = rcdata[i][6];
-      var heatmapColor;
-      if (include_space_stats && displayLabel == "space") {
-        heatmapColor = { red: 255, green: 140, blue: 0 };
-      } else {
-        var colorRatio = keyUsageMax > 0 ? frequency / keyUsageMax : 0;
-        heatmapColor = getHeatmapColor(colorRatio);
-      }
+      var colorRatio = keyUsageMax > 0 ? frequency / keyUsageMax : 0;
+      var heatmapColor = getHeatmapColor(colorRatio);
       red = heatmapColor.red;
       var greenValue = heatmapColor.green;
       var blueValue = heatmapColor.blue;
-      var luminance = 0.2126 * red + 0.7152 * greenValue + 0.0722 * blueValue;
-      var textShade = luminance > 140 ? 0 : 255;
       hex_red = red.toString(16).padStart(2, "0");
       hex_bg = greenValue.toString(16).padStart(2, "0");
       var hex_blue = blueValue.toString(16).padStart(2, "0");
-      var hex_text = textShade.toString(16).padStart(2, "0");
+      var hex_text = "00";
 
       fontsize = 16;
       if (displayLabel.length > 1) { fontsize = 10; }
@@ -1489,21 +1481,16 @@ function getUnresolvedTooltipText() {
 
 function getHeatmapColor(colorRatio) {
   if (colorRatio <= 0) {
-    return { red: 0, green: 0, blue: 0 };
+    return { red: 96, green: 96, blue: 96 };
   }
   var boostedRatio = Math.pow(colorRatio, 0.45);
-  var scaled = boostedRatio * 2;
-  if (scaled <= 1) {
-    return {
-      red: 0,
-      green: 0,
-      blue: Math.floor(255 * scaled),
-    };
-  }
+  var base = 96;
+  var maxGreenBlue = 168;
+  var maxRed = 255;
   return {
-    red: Math.floor(255 * (scaled - 1)),
-    green: 0,
-    blue: Math.floor(255 * (2 - scaled)),
+    red: Math.floor(base + (maxRed - base) * boostedRatio),
+    green: Math.floor(base + (maxGreenBlue - base) * boostedRatio),
+    blue: Math.floor(base + (maxGreenBlue - base) * boostedRatio),
   };
 }
 

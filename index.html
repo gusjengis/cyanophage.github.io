@@ -59,6 +59,7 @@
     <div id="content" class="empty">Loading layouts...</div>
   </main>
   <script>
+    const HOMEPAGE_CACHE_VERSION = 'v2';
     const content = document.getElementById('content');
     const sidebar = document.getElementById('sidebar');
     const corpusSelect = document.getElementById('corpusSelect');
@@ -67,6 +68,74 @@
     let activeSort = 'default';
     let currentCorpus = new URLSearchParams(window.location.search).get('lan') || 'english';
     corpusSelect.value = currentCorpus;
+
+    function getCacheKey(layout) {
+      return `homepage-layout-cache:${HOMEPAGE_CACHE_VERSION}:${currentCorpus}:${layout.anchor}:${layout.query}`;
+    }
+
+    function readCachedLayout(layout) {
+      try {
+        const raw = localStorage.getItem(getCacheKey(layout));
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        console.warn('Failed to read cached layout', layout.anchor, error);
+        return null;
+      }
+    }
+
+    function writeCachedLayout(layout, payload) {
+      try {
+        localStorage.setItem(getCacheKey(layout), JSON.stringify(payload));
+      } catch (error) {
+        console.warn('Failed to write cached layout', layout.anchor, error);
+      }
+    }
+
+    function buildStaticSnapshot(doc) {
+      const clone = doc.documentElement.cloneNode(true);
+      clone.querySelectorAll('script').forEach(script => script.remove());
+      const body = clone.querySelector('body');
+      if (body) {
+        body.style.overflow = 'hidden';
+        body.style.margin = '0';
+      }
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+
+    function captureFrameCache(layout) {
+      if (!layout.frame || !layout.metrics) {
+        return;
+      }
+      try {
+        const doc = layout.frame.contentDocument;
+        if (!doc || !doc.documentElement) {
+          return;
+        }
+        writeCachedLayout(layout, {
+          metrics: layout.metrics,
+          height: layout.cachedHeight || parseInt(layout.frame.style.height || '988', 10),
+          html: buildStaticSnapshot(doc),
+        });
+      } catch (error) {
+        console.warn('Failed to capture cached iframe HTML', layout.anchor, error);
+      }
+    }
+
+    function loadLayoutFrame(layout) {
+      const cached = readCachedLayout(layout);
+      if (cached?.html) {
+        layout.metrics = cached.metrics || null;
+        layout.cachedHeight = cached.height || 988;
+        layout.frame.style.height = `${layout.cachedHeight}px`;
+        layout.frame.srcdoc = cached.html;
+        return;
+      }
+      layout.metrics = null;
+      layout.cachedHeight = 988;
+      layout.frame.style.height = '988px';
+      layout.frame.removeAttribute('srcdoc');
+      layout.frame.src = buildEmbedSrc(layout);
+    }
 
     function buildEmbedSrc(layout) {
       return `home_layout.html?embed=1&spaceStats=0&lan=${encodeURIComponent(currentCorpus)}&${layout.query}&layoutId=${encodeURIComponent(layout.anchor)}`;
@@ -133,7 +202,12 @@
         const frame = document.createElement('iframe');
         frame.className = 'layout-frame';
         frame.loading = 'lazy';
-        frame.src = buildEmbedSrc(layout);
+        frame.scrolling = 'no';
+        frame.addEventListener('load', () => {
+          if (!layout.frame.hasAttribute('srcdoc')) {
+            window.setTimeout(() => captureFrameCache(layout), 50);
+          }
+        });
 
         card.appendChild(title);
         card.appendChild(meta);
@@ -142,6 +216,7 @@
         layout.element = card;
         layout.frame = frame;
         layout.edit = edit;
+        loadLayoutFrame(layout);
         content.appendChild(card);
       }
       sortLayouts();
@@ -153,9 +228,8 @@
       params.set('lan', currentCorpus);
       history.replaceState(null, '', `?${params.toString()}`);
       for (const layout of layouts) {
-        layout.metrics = null;
-        layout.frame.src = buildEmbedSrc(layout);
         layout.edit.href = `playground.html?${layout.query}&lan=${encodeURIComponent(currentCorpus)}&spaceStats=0`;
+        loadLayoutFrame(layout);
       }
       if (activeSort === 'default' || activeSort === 'name') {
         sortLayouts();
@@ -175,6 +249,7 @@
         return;
       }
       layout.metrics = data.metrics;
+      window.setTimeout(() => captureFrameCache(layout), 50);
     });
 
     window.addEventListener('message', event => {
@@ -190,7 +265,9 @@
         return;
       }
       if (typeof data.height === 'number' && data.height > 0) {
-        layout.frame.style.height = `${data.height}px`;
+        layout.cachedHeight = data.height + 8;
+        layout.frame.style.height = `${layout.cachedHeight}px`;
+        window.setTimeout(() => captureFrameCache(layout), 50);
       }
     });
 
