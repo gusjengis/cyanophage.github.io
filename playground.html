@@ -139,6 +139,7 @@
       <button class="dropbtn" id="langDropDown">English</button>
       <div class="dropdown-content">
         <a onclick="selectLanguage('dutch',event)">Dutch</a>
+        <a onclick="selectLanguage('programming',event)">Programming</a>
         <a onclick="selectLanguage('english',event)">English</a>
         <a onclick="selectLanguage('estonian',event)">Estonian</a>
         <a onclick="selectLanguage('finnish',event)">Finnish</a>
@@ -154,6 +155,10 @@
         <a onclick="selectLanguage('swedish',event)">Swedish</a>
       </div>
     </div>
+    |
+    <a onclick="addLayer()">add layer</a>
+    |
+    <label><input type="checkbox" id="spaceStatsToggle" onchange="toggleSpaceStats()"> include space</label>
     <div class="layout-svg" id = "svglayout"></div>
     <br>
     <div class="stats-svg" id = "svgstats"></div>
@@ -227,6 +232,6 @@
       </div>
     </div>
 
-    <script type = "text/javascript" src="keyboard_svg.js"></script>
+    <script type = "text/javascript" src="keyboard_svg.js?v=20260407b"></script>
   </body>
 </html>

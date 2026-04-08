@@ -1332,7 +1332,7 @@ function updateRcData(lan) {
     if (getIndexOfKey(21) >= 0) { rcdata[getIndexOfKey(21)][0] = '\'' }
     if (getIndexOfKey(31) >= 0) { rcdata[getIndexOfKey(31)][0] = 'ä' }
     if (getIndexOfKey(32) >= 0) { rcdata[getIndexOfKey(32)][0] = 'ß' }
-  } else if (lan == 'english') {
+  } else if (lan == 'english' || lan == 'programming' || lan == 'computer') {
     // letters = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '-', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/','\\']
     if (getIndexOfKey(10) >= 0) { rcdata[getIndexOfKey(10)][0] = '-' }
     if (getIndexOfKey(20) >= 0) { rcdata[getIndexOfKey(20)][0] = ';' }

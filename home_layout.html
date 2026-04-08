@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layout Card</title>
+  <link href='https://fonts.googleapis.com/css?family=Roboto Mono' rel='stylesheet'>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { margin: 0; background: #1b1c1f; color: #dfe2eb; }
+    .layout-svg, .stats-svg { width: 1040px; }
+    #tooltip { background:#333333; color:#cccccc; border: 1px solid #cccccc; padding:5px; }
+  </style>
+</head>
+<body>
+  <div id="tooltip" display="none" style="position:absolute;display:none;"></div>
+  <div class="layout-svg" id="svglayout"></div>
+  <div class="stats-svg" id="svgstats"></div>
+  <script src="keyboard_svg.js"></script>
+</body>
+</html>
